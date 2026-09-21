@@ -1,0 +1,8 @@
+# private working notes (claim→source map, CV/LinkedIn drafts) — never published
+notes/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.sqlite
+.DS_Store
