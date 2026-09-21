@@ -544,8 +544,8 @@ and flipped to a transient `confirming` status so it does not conflict with itse
   pushes happen before it finishes; a commit that did not parse reached staging once,
   which is why the pre-push hook byte-compiles the commit being pushed. Hosted CI is
   the first thing to add with a second contributor.
-- Rate-limit counters are per process. With two gunicorn workers the effective limits
-  are looser than configured until the counters move to a shared store.
+- Rate-limit counters are held in-process. Moving them to a shared store is the first
+  change to make before the API scales out to multiple instances.
 - It started as separate frontend and backend repositories and was merged into a
   monorepo so that a behaviour change, its tests and its documentation are one commit.
 - Bootstrap was adopted early and later removed completely, in favour of an owned
