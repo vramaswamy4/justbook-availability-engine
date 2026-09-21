@@ -72,43 +72,50 @@ guard agreeing with the read path.
 ```mermaid
 flowchart TB
   subgraph Clients
-    PUB["Public booking site<br/>&lt;tenant&gt;.justbookapp.com"]
+    direction LR
+    PUB["Public booking site<br/>your-salon.justbookapp.com"]
     ADM["Admin portal + Control Panel<br/>(same React SPA)"]
     APP["iOS / Android app<br/>Capacitor shell, Tap to Pay"]
   end
 
-  subgraph CF["Cloudflare"]
-    W1["Worker: SPA<br/>wildcard route, per-tenant SEO injection"]
-    W2["Worker: marketing site (Astro)"]
-    W3["Worker: public docs (Starlight)"]
+  subgraph CF["Cloudflare Workers"]
+    direction LR
+    W1["SPA<br/>wildcard route, per-tenant SEO injection"]
+    W2["Marketing site (Astro)"]
+    W3["Public docs (Starlight)"]
   end
 
   subgraph Render
+    direction LR
     API["Flask API<br/>gunicorn, 52 blueprints"]
     WRK["Background worker<br/>60 s reminder loop + 5 min task batch"]
     CRON["Daily + weekly cron jobs"]
     PG[("PostgreSQL")]
   end
 
-  S3[("S3 + CloudFront<br/>uploads")]
-  STRIPE["Stripe<br/>Connect Standard · Billing · Terminal"]
-  MSG["Twilio SMS / WhatsApp<br/>ZeptoMail · Postmark · tenant SMTP<br/>APNs · FCM"]
-  SENTRY["Sentry"]
-  GH["GitHub Actions<br/>nightly pg_dump → S3"]
+  subgraph EXT["External services"]
+    direction LR
+    STRIPE["Stripe<br/>Connect Standard, Billing, Terminal"]
+    MSG["Twilio SMS / WhatsApp<br/>ZeptoMail, Postmark, tenant SMTP<br/>APNs, FCM"]
+    S3[("S3 + CloudFront<br/>uploads")]
+    SENTRY["Sentry"]
+  end
+
+  GH["GitHub Actions<br/>nightly pg_dump to S3"]
 
   PUB --> W1
   ADM --> W1
-  APP --> API
   W1 -->|"X-Client-Subdomain"| API
+  APP --> API
   API --> PG
-  API --> S3
-  API <-->|"2 webhook endpoints"| STRIPE
   WRK --> PG
-  WRK --> MSG
   CRON --> PG
+  API <-->|"2 webhook endpoints"| STRIPE
   API --> MSG
+  WRK --> MSG
+  API --> S3
   API --> SENTRY
-  GH --> PG
+  GH -.-> PG
 ```
 
 **Backend.** A Flask 3.1 application factory; routes are split into 52 blueprints
